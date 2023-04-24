@@ -9,15 +9,15 @@ Your project could be separated into two parts, the Java module part which is us
 
 You can use the plugin to:
 
-    select different languages on the toolbar;
-    search what3words address on the toolbar;
-    use the AutoSuggestion functionality on the search bar to find the right what3words address;
-    convert a what3words address typed on the search bar to a point feature on the map (convert to coordinate);
-    tap on the map to get any what3words address (convert to what3words address);
-    display the what3words address on the selection status bar pane at the bottom of the map;
-    use the backward or forward buttons on the what3word toolbar to search for a what3words selection;
-    display all the what3words addresses that have been searched using the what3words history viewer plugin;
-    display the what3words grid on the map by enabling the grid icon.
+* select different languages on the toolbar;
+* search what3words address on the toolbar;
+* use the AutoSuggestion functionality on the search bar to find the right what3words address;
+* convert a what3words address typed on the search bar to a point feature on the map (convert to coordinate);
+* tap on the map to get any what3words address (convert to what3words address);
+* display the what3words address on the selection status bar pane at the bottom of the map;
+* use the backward or forward buttons on the what3word toolbar to search for a what3words selection;
+* display all the what3words addresses that have been searched using the what3words history viewer plugin;
+* display the what3words grid on the map by enabling the grid icon.
 
 
 ## Installation
