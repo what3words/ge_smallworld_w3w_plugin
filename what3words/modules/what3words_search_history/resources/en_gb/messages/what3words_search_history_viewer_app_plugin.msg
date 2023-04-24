@@ -1,0 +1,14 @@
+#% text_encoding = iso8859_1
+
+:title				What3Words
+:title_tooltip
+<body>
+<h2>Find Substations and view them on the map</h2> 
+<p>Use these queries to search the database for Substations. The fields for each query indicate the values that you can enter in order to narrow down the search.</p>
+<p>To start the search, click:</p>
+<img src="swift_view_application.run"/>
+<p>When the substation is found, click the checkbox to make it available for circuit building, Alternativly you can select a substation on the map and press:</p>
+<img src="ui_resources.add_to_selection"/>
+<p>To make it available for circuit building.</p>
+<p>Press F1 to learn more.</p>
+</body>

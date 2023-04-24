@@ -1,0 +1,434 @@
+#% text_encoding = iso8859_1
+##-----------------------------------------------------------------------------------------------
+## What3Words Smallworld GE Implementation
+##
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http:##www.gnu.org/licenses/>.
+##
+##
+##-----------------------------------------------------------------------------------------------
+
+
+_package user
+$
+
+
+
+remex(:what3words_pushpin_renderer)
+$
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+def_slotted_exemplar(:what3words_pushpin_renderer,
+	{
+		{ :what3words_pushpins , _unset },
+		{ :latest_what3words , _unset },
+		{ :what3words_grid , _unset }		
+	},
+	{:plugin ,:map_pushpin_renderer  }) 
+$
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## If value is :coordinate then instead of the what3words, in the map, coordinate will be displayed
+## if value is words , the words will show in the pushpin, defaults to words
+## if value is :words_and_coordinate then both coordinate and w3ws will be displayed
+what3words_pushpin_renderer.def_property( :display_mode,
+				   :type, :symbol,
+				   :default_value, :words )
+$
+
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## The colour in hex format for the grid colour
+##
+what3words_pushpin_renderer.def_property( :grid_colour,
+				   :type, :string ,
+				   :default_value, "b8a09e" )
+$
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## The colour in hex format for the grid colour
+##
+what3words_pushpin_renderer.def_property( :grid_line_width,
+				   :type, :integer ,
+				   :default_value, 1 )
+$
+
+
+
+
+_pragma(classify_level=basic, topic={what3words})
+what3words_pushpin_renderer.define_shared_constant( :databus_producer_data_types,
+	{
+		##
+		##
+		##
+		## Show Pushpins on the map
+		##								 
+		:show_map_pushpins
+	},
+	:public )
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+what3words_pushpin_renderer.define_shared_constant( :databus_consumer_data_types,
+	{
+		##
+		##
+		##
+		## propagate what3words for interested parties
+		##
+		:what3words_pushpin,
+		:show_what3words_pushpins,
+		:clear_what3words_pushpins,
+		:what3words_grid,
+		:clear_what3words_grid
+	},
+	:public )
+$
+
+
+_pragma(classify_level=restricted)
+_private _method what3words_pushpin_renderer.init( _gather args )
+
+	#---------------------------------------------------
+	##
+	## Initialises slots and returns _self.
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	_super.init( _scatter args )
+
+	.what3words_pushpins << equality_set.new() 
+	_return _self
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.sw_databus_data_available( data_type_name, data )
+
+	#---------------------------------------------------
+	##
+	## The plugin reacts on the following type:
+	## what3words
+	##	
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	_if data_type_name _is :show_what3words_pushpins
+	_then
+		_local ( owner , l_w3w_pushpins ) << ( _scatter data )		 
+		l_w3ws << _if l_w3w_pushpins.is_kind_of?(sw:basic_collection_mixin) 
+			  _then >> l_w3w_pushpins 
+			  _else >> rope.new_with( l_w3w_pushpins )
+			  _endif	
+		.what3words_pushpins.empty()
+		.what3words_pushpins.add_all(l_w3ws)
+		.latest_what3words << _unset 
+		_self.display_pushpins()
+	_elif data_type_name _is :what3words_pushpin
+	_then 
+		_local ( owner , l_w3w_pushpin ) << ( _scatter data )
+		.latest_what3words << l_w3w_pushpin
+		.what3words_pushpins.empty()
+	_elif data_type_name _is :what3words_grid
+	_then
+		_local ( owner , l_w3w_grid ) << ( _scatter data )
+		.what3words_grid << l_w3w_grid
+		_self.draw_grid ()
+	_elif data_type_name _is :clear_what3words_pushpins
+	_then
+	 	_self.clear_pushpins()
+	_elif data_type_name _is :clear_what3words_grid
+	_then
+		_if .what3words_grid _isnt _unset  _andif
+		    .what3words_grid.empty? _is _false 
+		_then
+			_self.undraw_grid ()
+		_endif
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.map_damage_notify( a_graphics_context, a_map_view, _optional display_style )
+
+	#---------------------------------------------------
+	##
+	## Callback required by the registration of _SELF as a
+	## map_manage post renderer. See (post_init_plugins())
+	##
+	## GC - a graphics_context to draw on
+	##
+	## A_MAP_VIEW - the map view on which the map damage occurred
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	txfm    << a_map_view.window.transform
+	a_world << a_map_view.world
+	bounds  << a_map_view.current_view_bounds
+
+	_if .what3words_pushpins _isnt _unset _andif 
+		.what3words_pushpins.empty? _is _false 
+	_then
+		_for a_w3w_pushpin _over .what3words_pushpins.fast_elements()
+		_loop
+			_self.draw_w3w_pushpin( a_graphics_context, txfm , a_w3w_pushpin )
+		_endloop 
+	_endif 
+	
+	_if .latest_what3words _isnt _unset 
+	_then 
+		_self.draw_w3w_pushpin( a_graphics_context, txfm , .latest_what3words)
+	_endif 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.draw_w3w_pushpin( a_graphics_context, txfm , a_w3w_pushpin )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	l_background_colour <<  fill_style.new_with_properties(:foreground_colour, a_w3w_pushpin.background_colour)
+	#l_text_colour << fill_style.new_with_properties(:foreground_colour, a_w3w_pushpin.text_colour )
+	_dynamic !print_float_precision! << 15
+	p_coord << pixel_coordinate.new_from( txfm.convert( a_w3w_pushpin.coordinate) )
+
+	_if _self.display_mode _isnt :words_and_coordinate
+	_then 	 
+		l_label << _if _self.display_mode _is :coordinate
+			   _then 
+				   >> _self.coordinate_string ( a_w3w_pushpin )
+			   _else
+				   >> a_w3w_pushpin.what3words
+			   _endif   
+		_self.draw_pushpin( l_label , a_graphics_context, p_coord.x, p_coord.y , _unset , _true  , _unset , l_background_colour  )
+	_else	
+		l_bounds << _self.pushpin_bounds( _self.coordinate_string ( a_w3w_pushpin ) , a_graphics_context, p_coord.x , p_coord.y , _true )
+		_self.draw_pushpin( a_w3w_pushpin.what3words , a_graphics_context, p_coord.x, p_coord.y , _unset , _true  , _unset , l_background_colour  )
+		_self.draw_pushpin( _self.coordinate_string ( a_w3w_pushpin ) , a_graphics_context, p_coord.x , p_coord.y - l_bounds.height , _unset , _false  , _unset , l_background_colour  )
+ 	_endif 
+_endmethod 
+$
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.coordinate_string( a_w3w_pushpin )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_dynamic !print_float_precision! << 12
+	>> write_string( a_w3w_pushpin.coordinate.x.normalised_string ," , ", a_w3w_pushpin.coordinate.y.normalised_string)
+_endmethod 
+$
+
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.draw_grid()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	l_window <<  _self.databus_request_data( :active_map_view ).window
+	l_colour << colour.new_from_hex ( _self.grid_colour )
+	l_window.draw( .what3words_grid , line_style.new_with_properties(:width, _self.grid_line_width , :foreground_colour, l_colour ))
+_endmethod 
+$
+
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.undraw_grid()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	l_window <<  _self.databus_request_data( :active_map_view ).window
+	l_colour << colour.new_from_hex ( _self.grid_colour )
+	l_window.undraw( .what3words_grid , line_style.new_with_properties(:width, _self.grid_line_width , :foreground_colour, l_colour )  )
+	.what3words_grid.empty()
+	# In a swaf application refresh the map
+	_if ( map_man << _self.map_manager ) _isnt _unset
+	_then
+		map_man.trigger_transient_redraw()
+		map_man.refresh_all()
+	_endif
+
+_endmethod 
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.display_pushpins()
+	#---------------------------------------------------
+	##  
+	## Displays the pushpins on the map
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+	
+
+	# objects, labels, _optional highlight_geometry, deemphasize_background?, map_coords, append?, draw?
+	
+	_if .what3words_pushpins _is _unset _orif 
+		.what3words_pushpins.empty?
+	_then
+		_return 
+	_endif
+	data <<  { .what3words_pushpins  , {}.new_as_index (.what3words_pushpins.size) , _true, _true, .what3words_pushpins.map(_proc (e) >> e.coordinate _endproc)  , _true, _true}
+	_self.databus.make_data_available( :show_map_pushpins, data )
+	_if ( map_man << _self.map_manager ) _isnt _unset
+	_then
+		map_man.trigger_transient_redraw()
+	_endif
+	
+_endmethod
+$
+
+
+
+_method what3words_pushpin_renderer.clear_pushpins( )
+
+	#---------------------------------------------------
+	## 
+	## Clear pushpins
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_if .what3words_pushpins _isnt _unset 
+	_then .what3words_pushpins.empty()
+	_endif 
+	.latest_what3words << _unset	
+	_self.databus.make_data_available( :show_map_pushpins, {{},{}} )
+	# In a swaf application refresh the map
+	_if ( map_man << _self.map_manager ) _isnt _unset
+	_then
+		map_man.trigger_transient_redraw()
+	_endif	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_pushpin_renderer.map_manager
+
+	#---------------------------------------------------
+	##  Function:  
+	##  Arguments: 
+	##  Returns: 
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	>> _self.application.get_service_provider (:map_manager )
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_pushpin_renderer.post_activation()
+	#---------------------------------------------------
+	##  Function:  
+	##  Arguments: 
+	##  Returns: 
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	# For swaf use transient redraw mechanism to draw the pushpins
+	_if ( map_man << _self.map_manager ) _isnt _unset 
+	_then
+		map_man.add_post_renderer( _self, 10, :transient_drawer )
+		map_man.trigger_transient_redraw()
+	_endif
+
+	_super.post_activation()
+
+_endmethod
+$
+_pragma(classify_level=restricted)
+_method what3words_pushpin_renderer.on_deactivation()
+	#---------------------------------------------------
+	##  Function:  
+	##  Arguments: 
+	##  Returns: 
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	# For swaf use transient redraw mechanism to draw the pushpins
+	_if ( map_man << _self.map_manager ) _isnt _unset 
+	_then
+		map_man.remove_post_renderer( _self )
+		map_man.trigger_transient_redraw()
+	_endif 
+	_super.on_deactivation()
+_endmethod
+$
+
+

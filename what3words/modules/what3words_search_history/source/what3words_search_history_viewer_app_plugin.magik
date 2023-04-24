@@ -1,0 +1,385 @@
+#% text_encoding = iso8859_1
+##-----------------------------------------------------------------------------------------------
+## What3Words Smallworld GE Implementation
+##
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http:##www.gnu.org/licenses/>.
+##
+##
+##-----------------------------------------------------------------------------------------------
+
+
+_package user
+$
+
+
+remex(:what3words_search_history_viewer_app_plugin)
+$
+
+
+_pragma(classify_level=restricted)
+##
+##
+##
+def_slotted_exemplar( :what3words_search_history_viewer_app_plugin,
+	{},
+	:plugin )
+$
+
+
+
+_pragma(classify_level=basic, topic={what3words})
+what3words_search_history_viewer_app_plugin.define_shared_constant( :databus_producer_data_types,
+	{
+		##
+		## Request to goto spatial object
+		##
+		:goto_request,
+		##
+		##
+		##
+		## Show Pushpins on the map
+		##								 
+		:show_map_pushpins,
+		:show_what3words_pushpins,
+		:clear_what3words_pushpins
+	},
+	:public )
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+what3words_search_history_viewer_app_plugin.define_shared_constant( :databus_consumer_data_types,
+	{
+		##
+		##
+		##
+		## propagate what3words for interested parties
+		##
+		:what3words_pushpin
+
+		
+	},
+	:public )
+$
+
+
+_pragma(classify_level=advanced)
+##
+## Name of the gui definition file. Defaults to "gui.xml".
+##
+what3words_search_history_viewer_app_plugin.def_property( :gui_definition_file_name,
+	:type , :string,
+	:default_value , "gui.xml",
+	:description, "Name of the gui definition file",
+	:readable? , _false ,
+	:writable? , _false )
+$
+
+
+
+_pragma(classify_level=advanced)
+what3words_search_history_viewer_app_plugin.def_property(:gui_definition_module_name,
+	:type , :string,
+	:default_value , "what3words_search_history",
+	:description, "Name of module in which gui definition is located",
+	:readable? , _false ,
+	:writable? , _false )
+$
+
+
+
+
+_pragma(classify_level=advanced)
+##
+## Name of the config definition file. Defaults to "config.xml".
+##
+what3words_search_history_viewer_app_plugin.def_property(:config_definition_file_name,
+	:type , :string,
+	:default_value , "config.xml",
+	:description, "Name of the config definition file",
+	:readable? , _false ,
+	:writable? , _false )
+$
+
+
+
+
+
+_pragma(classify_level=advanced)
+##
+## Defines the name of the module which provides the config definition file.
+## Defaults to the name of the module in which the class
+## exemplar was defined.
+##
+what3words_search_history_viewer_app_plugin.def_property( :config_definition_module_name,
+	:type , :string,
+	:default_value , "what3words_search_history",
+	:description, "Name of the module which provides plugin definition file",
+	:readable? , _false ,
+	:writable? , _false )
+$
+
+
+
+_pragma(classify_level=restricted)
+## Actions Definitions constant, will load while super.init is called
+what3words_search_history_viewer_app_plugin.define_shared_constant( :action_definitions,
+	keyed_set.new_with(
+		sw_action_def.new( 
+			:activate_what3words_search_history_viewer,
+			:action_message, :|activate_what3words_search_history_viewer()| ) ),
+	:private )
+$
+
+
+
+_pragma(classify_level=restricted)
+_private _method what3words_search_history_viewer_app_plugin.init( _gather args )
+	##
+	## Initialises the plugin
+	## 
+
+	_super.init( _scatter args )
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method what3words_search_history_viewer_app_plugin.new_viewer( name )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	_return what3words_search_history_viewer.new( name, _self,
+		   :config_definition_module_name, _self.config_definition_module_name,
+		   :config_definition_file_name, _self.config_definition_file_name,
+		   :gui_definition_module_name, _self.gui_definition_module_name,
+		   :gui_definition_file_name, _self.gui_definition_file_name,
+		   :gui_type, :swift )
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer_app_plugin.build_gui( a_container, _optional an_xml_element ) 
+	#---------------------------------------------------
+	## 
+	## Builds the embedded what3words searchi history viewer , a_container will be a container passed from work area
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	l_container << sw_container.new( a_container, 1, 1 )
+	l_container.tab_label << _self.message( :title )
+	
+	_local l_name << :embedded_what3words_search_history_viewer
+	
+	_local l_w3w_history_viewer << _self.new_viewer( l_name )
+	
+	_self.cache_dialog( l_name, l_w3w_history_viewer )
+
+	l_w3w_history_viewer.build_gui( l_container )
+
+	_return l_container
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer_app_plugin.activate_w3w_history_viewer() 
+	#---------------------------------------------------
+	## 
+	## Action Message to activate a floating w3w history viewer
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_local l_name << :floating_what3words_search_history_viewer
+	
+	_local l_w3w_history_viewer << _self.get_dialog( l_name )
+	
+	_if l_w3w_history_viewer _is _unset
+	_then
+		l_w3w_history_viewer << _self.new_viewer( l_name )
+		
+		_self.cache_dialog( l_name, l_w3w_history_viewer )
+									  
+		l_w3w_history_viewer.activate_relative_to( _self.top_frame, 
+							 					   _self.message( :title ), 
+							   					   _self.top_frame, 50, 50,
+												   _unset , _unset , 350 , 400 )								  
+	_else
+		l_w3w_history_viewer.activate()
+	_endif
+
+	_return l_w3w_history_viewer
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer_app_plugin.sw_databus_data_available( data_type_name, data )
+	#---------------------------------------------------
+	##
+	## Called whenever DATA of type DATA_TYPE_NAME is available on
+	## the databus. The plugin reacts on the following types:
+	## map_selection, map_trail and map_properties.
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_if data_type_name _is :what3words_pushpin
+	_then
+		_local ( owner , l_w3w_pushpins  ) << ( _scatter data )
+		_if owner.class_name _is :what3words_search_history_viewer
+		_then
+			_return 
+		_endif
+		_self.new_what3words_pushpins_data_available ( data_type_name, data )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted)
+_private _method what3words_search_history_viewer_app_plugin.new_what3words_pushpins_data_available( data_type_name, data )
+	#---------------------------------------------------
+	##
+	## Informs viewers (embedded and floating) that DATA of type DATA_TYPE_NAME
+	## are put on the databus.
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+
+	_for a_dialog_name _over { :embedded_what3words_search_history_viewer , :floating_what3words_search_history_viewer }.fast_elements()
+	_loop 
+		_if ( l_dialog << _self.get_dialog( a_dialog_name )) _isnt _unset
+		_then
+			l_dialog.what3words_pushpins_data_available( data_type_name, data )
+		_endif
+	_endloop
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={EO, circuit})
+_method what3words_search_history_viewer_app_plugin.map_manager
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	#
+	#-------------- End Revision History ---------------
+
+	>> _self.application.get_service_provider (:map_manager)
+	
+_endmethod
+$
+
+
+
+_method what3words_search_history_viewer_app_plugin.clear_pushpins()
+	#---------------------------------------------------
+	## 
+	## Clear pushpins
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_self.databus.make_data_available( :clear_what3words_pushpins, {{},{}} )
+	_if ( map_man << _self.map_manager ) _isnt _unset
+	_then
+		map_man.trigger_transient_redraw()
+	_endif
+	
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer_app_plugin.show_pushpins( _gather data  )
+	#---------------------------------------------------
+	##  
+	## Displays the pushpins on the map
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	#data =>   {pushpin_objects, indices, _unset, _unset, coords, _unset, draw?}
+	#DEBUG show(" what3words_search_history_viewer_app_plugin_show_pushpins")
+	_self.databus.make_data_available( :show_what3words_pushpins , _scatter data )
+	_if ( map_man << _self.map_manager ) _isnt _unset
+	_then
+		map_man.trigger_transient_redraw()
+	_endif
+		
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer_app_plugin.terminate()
+	#---------------------------------------------------
+	##
+	## Terminates the plugin. 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_self.clear_pushpins()
+	_super.terminate()
+	
+_endmethod
+$

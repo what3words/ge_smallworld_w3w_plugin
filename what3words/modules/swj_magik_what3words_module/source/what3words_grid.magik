@@ -1,0 +1,189 @@
+#% text_encoding = iso8859_1
+##-----------------------------------------------------------------------------------------------
+## What3Words Smallworld GE Implementation
+##
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http:##www.gnu.org/licenses/>.
+##
+##
+##  
+##-----------------------------------------------------------------------------------------------
+
+_package user
+$
+
+remex(:w3w_grid)
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+def_slotted_exemplar(:w3w_grid,
+	{
+		{:json_string, _unset},
+		{:grid_lines,_unset }
+	})
+$
+
+
+
+_pragma(classify_level=basic)
+w3w_grid.define_slot_access(:json_string,
+			       ##
+			       ## 
+			       ##
+			       :write)
+$
+
+w3w_grid.define_slot_access(:grid_lines,
+			       ##
+			       ## 
+			       :write)
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_grid.new( _gather keys_and_args)
+	_return _clone.init( _scatter  keys_and_args )
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_grid.init( _gather keys_and_args )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	p << property_list.new_with(_scatter keys_and_args )
+
+	_for k,v _over p.fast_keys_and_elements()
+	_loop 
+		_self.perform_private(k.with_chevron,v)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_grid.setup()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_self.populate_grid_lines()
+	>> _self 
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_grid.transformed( a_transform )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	.grid_lines << .grid_lines.transformed ( a_transform )
+	>> _self 
+_endmethod
+$
+
+
+
+_pragma(classify_level=basic, topic={what3words})
+_private _method w3w_grid.populate_grid_lines()
+	
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	l_json << json_decoder.new().parse_string(.json_string)	
+	l_gs << geometry_set.new()
+	
+	_for k,v _over l_json[:lines].fast_keys_and_elements()
+	_loop
+		_self.add_line ( l_gs , v ) 
+	_endloop 
+	
+	.grid_lines << l_gs 
+	>> l_gs 
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method w3w_grid.add_line( l_geom_set , l_element )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	l_start << _self.get_coordinate( l_element[:start] )
+	l_end   << _self.get_coordinate( l_element[:end] 	 )	
+	l_cr << coords_rope.new()
+	l_cr.add( l_start )
+	l_cr.add_last ( l_end   )
+	
+	l_geom_set.add(sector.new_from( l_cr ) )	
+	 
+	>> l_geom_set
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method w3w_grid.get_coordinate( l_element )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	_dynamic !print_float_precision! << 12
+	
+	l_lng << l_element[:lng]
+	l_lat << l_element[:lat]	
+	>> coordinate ( l_lng , l_lat )
+_endmethod
+$
+

@@ -1,0 +1,9 @@
+what3words_search_history	1
+
+description
+	GUI Framework for holding the searched What3Words during the session
+end
+
+requires
+	swift_base
+end

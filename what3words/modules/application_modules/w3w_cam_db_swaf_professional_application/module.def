@@ -1,0 +1,12 @@
+w3w_cam_db_swaf_professional_application	1
+
+description
+	What3Words Professional application based on Application Framework architecture
+end
+
+requires	
+	cam_db_swaf_professional_application
+end 
+
+optional
+end

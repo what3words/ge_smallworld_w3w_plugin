@@ -1,0 +1,101 @@
+#% text_encoding = iso8859_1
+##-----------------------------------------------------------------------------------------------
+## What3Words Smallworld GE Implementation
+##
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http:##www.gnu.org/licenses/>.
+##
+##
+##  
+##-----------------------------------------------------------------------------------------------
+
+_package user
+$
+
+remex(:w3w_pushpin)
+$
+
+
+_pragma(classify_level=basic, topic={what3words})
+def_slotted_exemplar(:w3w_pushpin,
+	{
+		{:coordinate, _unset},
+		{:what3words , _unset},
+		{:background_colour , _unset}
+	})
+$
+
+
+
+_pragma(classify_level=basic)
+w3w_pushpin.define_slot_access(:coordinate,
+			       ##
+				   ##
+			       :write)
+$
+
+_pragma(classify_level=basic)
+w3w_pushpin.define_slot_access(:what3words,
+			       ##
+			       ##
+			       :write)
+$
+
+_pragma(classify_level=basic)
+w3w_pushpin.define_slot_access(:background_colour,
+			       ##
+			       ##
+			       :write)
+$
+
+
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_pushpin.new( _gather keys_and_args)
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_return _clone.init( _scatter  keys_and_args )
+_endmethod
+$
+
+_pragma(classify_level=basic, topic={what3words})
+_method w3w_pushpin.init( _gather keys_and_args )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+ 
+	p << property_list.new_with(_scatter keys_and_args )
+
+	_for k,v _over p.fast_keys_and_elements()
+	_loop 
+		_self.perform_private(k.with_chevron,v)
+	_endloop
+	
+	>> _self
+_endmethod
+$
+

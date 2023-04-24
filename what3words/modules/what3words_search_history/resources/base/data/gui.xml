@@ -1,0 +1,17 @@
+<gui>
+
+	<toolbar name="navigate_what3words">
+		<action name="show_pushpin_for_selection"/>
+		<action name="show_pushpin_for_all"/>
+	</toolbar>
+	<toolbar name="remove_what3words">
+		<action name="remove_all"/>
+    </toolbar>	
+	<dock name="top" background_type="button_group">
+		<toolbar name="navigate_what3words"/>
+		<toolbar name="remove_what3words"/>
+	</dock>
+    <work_area>
+		<self width="350" height="400"/>
+	</work_area>
+</gui>

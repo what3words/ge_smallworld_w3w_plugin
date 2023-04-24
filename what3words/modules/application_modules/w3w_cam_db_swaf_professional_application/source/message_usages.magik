@@ -1,0 +1,4 @@
+#% text_encoding = iso8859_1
+_package user
+message_handler.new(:w3w_cam_db_swaf_professional_application).set_uses_list({ :cam_db_swaf_professional_application })
+$

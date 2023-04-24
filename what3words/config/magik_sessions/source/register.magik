@@ -1,0 +1,36 @@
+#% text_encoding = iso8859_1
+_package sw
+
+!global_auto_declare?! << _true
+$
+
+_block
+
+	_local open_database_proc <<
+		_proc@open_database_proc( a_session )
+			ace_dir << a_session.open_database()
+			write( "Database Opened: ", ace_dir )
+		_endproc
+	
+	magik_session.register_new(
+		"what3words_cambridge_db_closed",
+
+		:parent_session, "sw_core:swaf",
+		
+		:add_products, { :cambridge_db , :what3words , :sw_dev_tools},
+		
+		:optional_products, { :sw_core_lp, :cambridge_db_lp },
+		
+		:load_modules, { :w3w_cam_db_swaf_professional_application, :what3words_image } )
+	
+	magik_session.register_new(
+		"what3words_cambridge_db_open",
+
+		:parent_session, "what3words_cambridge_db_closed",
+		
+		:startup_proc, :startup,
+		
+		:open_database_proc, open_database_proc )
+	
+_endblock
+$

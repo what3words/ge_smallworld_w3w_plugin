@@ -1,0 +1,12 @@
+what3words_image	1
+
+description
+	Load What3Words modules
+end
+
+requires
+	json
+	what3words_plugin 2
+	what3words_search_history
+	
+end

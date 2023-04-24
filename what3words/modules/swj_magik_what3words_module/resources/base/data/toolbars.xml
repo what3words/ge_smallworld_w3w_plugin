@@ -1,0 +1,15 @@
+<toolbars>
+ 
+  <toolbar name="what3words">
+      <action name="language_chooser"/>
+	  <action name="what3words_address_inspector"/>	  
+      <action name="use_map_extent"/>
+	  <action name="display_grid"/>
+      <action name="geocode_address"/>
+	  <action name="geocode_address_btn"/>	  
+	  <action name="previous"/>
+	  <action name="next"/>	  	  
+  </toolbar>
+  
+</toolbars>
+

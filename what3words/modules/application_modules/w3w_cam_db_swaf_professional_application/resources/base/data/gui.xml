@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  gui.xml for the SWAF Professional application  -->
+<gui base="swaf_professional_application.gui">
+	
+	<!-- Start What3Words Changes Section-->
+	<dock name="top">
+		<toolbar name="what3words"/>
+		<section/>
+		<super/>
+	</dock>
+	<!-- END What3Words Changes Section -->
+
+  <!-- WORK AREA -->
+
+  <work_area>
+    <paned_window side_by_side="no" dynamic="no" cell_spacing="no">
+      <!-- <plugin plugin_name="asset_search"/> -->
+      <plugin plugin_name="task_bar" top_spacing="2" bottom_spacing="2"/>
+
+      <paned_window side_by_side="yes" col_spacing="6" col_resize_values="2,1" top_spacing="2" bottom_spacing="1" left_spacing="6" right_spacing="6">
+        <border>
+          <plugin plugin_name="document_manager">
+            <document plugin_name="maps" map_type="geographic" />
+          </plugin>
+        </border>
+
+        <paned_window side_by_side="no" row_spacing="6">
+          <border>
+            <!-- note: role viewport_mapping means Layouts is allowed to build panes inside this tab -->
+            <tab_box role="viewport_mapping">
+              <!-- these roles are used by the pane_manager to allow the user to switch the visibility of these tabs -->
+              <plugin plugin_name="object_control" role="object_control"/>
+              <plugin plugin_name="editor_manager" role="editor_manager"/>
+              <!-- <plugin plugin_name="analysis" role="network_analysis"/>  -->
+            </tab_box>
+          </border>
+
+          <border>
+            <tab_box role="viewers">
+			  <!-- Start What3Words Changes Section-->
+			  <plugin plugin_name="what3words_search_history_viewer"/>
+			  <!-- END What3Words Changes Section -->			
+              <plugin plugin_name="spatial_context_viewer">
+                <properties>
+                  <property name="width" value="300"/>
+                  <property name="height" value="300"/>
+                </properties>
+              </plugin>
+              <plugin plugin_name="overviewer">
+                <properties>
+                  <property name="width" value="300"/>
+                  <property name="height" value="300"/>
+                </properties>
+              </plugin>
+              <plugin plugin_name="map_selection_viewer"/>
+              <plugin plugin_name="streetview"/>
+            </tab_box>
+          </border>
+        </paned_window>
+      </paned_window>
+    </paned_window>
+  </work_area>
+
+
+
+</gui>

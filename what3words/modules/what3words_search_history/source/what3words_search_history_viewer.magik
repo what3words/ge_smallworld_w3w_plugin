@@ -1,0 +1,1032 @@
+#% text_encoding = iso8859_1
+##-----------------------------------------------------------------------------------------------
+## What3Words Smallworld GE Implementation
+##
+##
+## This program is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http:##www.gnu.org/licenses/>.
+##
+##
+##-----------------------------------------------------------------------------------------------
+
+
+_package user
+$
+
+remex(:what3words_search_history_viewer)
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+##
+## 
+##
+def_slotted_exemplar( :what3words_search_history_viewer,
+	{
+		{ :list_records , _unset },
+		{ :highlight_task , _unset },
+		{ :original_pushpin_text_colour , _unset },
+		{ :selected_row , _unset }
+	},
+	:gui_framework )
+$
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## Colour of the row background when users mouse hovers over it
+## The string value should be in HEX format. 
+##
+what3words_search_history_viewer.define_shared_constant( :list_row_background_colour,
+	colour.new_from_hex ( "d3d9de" ),
+	:private)
+$
+
+
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## Colour of the row background when users mouse hovers over it
+## The string value should be in HEX format. 
+##
+what3words_search_history_viewer.define_shared_constant( :coordinate_container_background_colour,
+	colour.new_from_hex ( "d3d9de" ),
+	:private)
+$
+
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## The background colour in hex format for the pushpins in the screen
+##
+what3words_search_history_viewer.define_shared_constant( :highlighted_what3words_background_colour,
+	colour.new_from_hex ( "ffff66" ),
+	:private)
+$
+
+
+_pragma(classify_level=advanced, topic={what3words})
+##
+## The background colour in hex format for the pushpins in the screen
+##
+what3words_search_history_viewer.define_shared_constant( :highlighted_what3words_text_colour,
+	colour.new_from_hex ( "000099" ),
+	:private)
+$
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+## Defines actions
+what3words_search_history_viewer.define_shared_constant( :action_definitions,
+		keyed_set.new_with(
+			
+
+			# display pushpin for w3w		   
+        	sw_action_def.new( :show_pushpin_for_selection,
+        			   :image, { :highlight, :ui_resources },
+        			   :toolbar_control, :image_toggle_item,
+        			   :value_change_message, :|toggle_highlight_selected_w3ws()| ),
+
+			# display all w3w pushpin	   
+        	sw_action_def.new( :show_pushpin_for_all,
+        			   :image, { :text_set, :ui_resources },
+        			   #:toolbar_control, :image_button_item,
+				   :toolbar_control, :image_toggle_item,
+        			   :value_change_message, :|show_pushpin_for_all_w3ws()| ),					   
+					   					   
+			# remove all w3w from list		   
+        	sw_action_def.new( :remove_all,
+        			   :image, { :clear, :ui_resources  },
+        			   :menu_control, :menu_button_item,
+        			   :action_message, :|remove_all()| ),
+
+
+		   
+			# remove all w3w from list		   
+        	sw_action_def.new( :goto_w3w,
+        			   :image, { :goto_object , :ui_resources  },
+        			   :menu_control, :menu_button_item,
+        			   :action_message, :|goto_w3w()| ),
+
+
+		   
+			#  copy coordinate		   
+        	sw_action_def.new( :copy_coordinate,
+        			   :image, { :copy, :ui_resources  },
+        			   :menu_control, :menu_button_item,
+        			   :action_message, :|copy_coordinate()| ),
+
+
+		
+			# remove all w3w from list		   
+        	sw_action_def.new( :create_trail,
+        			   :image, { :trail_16_16_cur, :ui_resources  },
+        			   :menu_control, :menu_button_item,
+        			   :action_message, :|create_trail()| )		
+
+		
+			  ),
+					   
+					   					   
+:private )
+$
+
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method what3words_search_history_viewer.init( name, a_framework, _optional properties )
+	#---------------------------------------------------
+	## Initialises slots and returns _self.
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	_super.init( name, a_framework, properties )
+	_self.add_dependent ( _self )
+	.list_records << rope.new() 
+	
+	_return _self
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.build_framework_gui(parent, _optional xml_element)
+	#---------------------------------------------------
+	##
+	## Builds the framework specific GUI in the PARENT container.
+	##
+	## XML_ELEMENT - an xml_thing which can be used to modify
+	## how the GUI is built.
+	##
+	## This method is called in response to seeing a <self> element
+	## in the XML. This element is passed here as XML_ELEMENT and
+	## may contain attributes or sub-elements to control the type
+	## of gui.
+	##
+	## It should return the top-level container used to display the
+	## gui.
+	##
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	#_local list_c << sw_container.new(parent, _unset , 1)
+
+	
+	con << _if parent.swift_control?
+	       _then
+		       >> parent
+	       _else
+		       a_panel << panel.new( parent )
+		       a_panel.border_width << 0
+		       a_panel.border_height << 0
+		       a_panel.tab_label << _self.message( :title )
+		       >> sw_canvas_container.new( a_panel, 1, 1,
+						   :top_spacing, 5,
+						   :bottom_spacing, 2,
+						   :left_spacing, 2,
+						   :right_spacing, 2 )
+	       _endif
+
+	con.external_label <<  _self.message( :title )
+	con.help_id << _self.framework.help_id
+
+	
+		
+	
+	_local l_list << sw_list.new( con ,
+		:selection_mode, :one,
+		:model, _self,
+		:prompt_text, _self.message(:empty_list_prompt),
+		:data_selector, :|w3w_data_list()|,
+		:selection_notifier, :|w3w_selected()|,
+		:aspect, :w3w_list,
+		:identifier, :w3w_list,
+		:resize?, _true)
+		
+	con << l_list.children_container 
+	con.row_spacing << 2 
+	con.default_col_alignment << :fill 
+	_self.build_menu( l_list ) 
+	_return l_list
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method what3words_search_history_viewer.build_menu ( a_list )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_if a_list.embedded_menu?
+	_then
+		a_menu << sw_menu_container.new( a_list )
+	_else
+		a_menu << sw_popup_menu.new( :parent, a_list.top_frame )
+		a_list.menu << a_menu
+	_endif
+
+	l_menu_item << rope.new()
+	l_menu_item.add( _self.action( :goto_w3w ).place_control_on( a_menu, :menu ) )
+	l_menu_item.add( _self.action( :copy_coordinate ).place_control_on( a_menu, :menu ) )
+	l_menu_item.add( _self.action( :create_trail ).place_control_on( a_menu, :menu ) )
+	sw_separator.new( a_menu )
+	l_menu_item.add( _self.action( :remove_all ).place_control_on( a_menu, :menu ) )
+	>> a_menu
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method what3words_search_history_viewer.manage_actions()
+	
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.w3w_data_list()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	l_w3w_list << _self.ui_control(:w3w_list)
+	
+	#_local a_theme << geom_list.current_theme
+	item_spacing << 5 #a_theme[:default_item_spacing]
+	top_spacing << 5 #item_spacing _div 2
+	col_spacing << 5 #a_theme[:default_outer_border_spacing]
+
+	#l_w3w_list.remove_all()
+
+	_for w3w _over .list_records.elements()
+	_loop
+
+		_local  l_list_con<< sw_container.new( l_w3w_list, 1, _unset ,
+						       :top_spacing, top_spacing,
+						       :bottom_spacing, top_spacing,
+						       :left_spacing, item_spacing,
+						       :right_spacing, item_spacing,
+						       :col_spacing, col_spacing,
+						       :col_alignment, :fill,
+						       :col_resize_values, {0, 1},
+						       :min_height, 25)
+		
+        	e_handler << sw_event_handler.new()
+        	e_handler.enter_handler << handler.new( _self, :|row_enter_event_handler()|, l_list_con )
+        	e_handler.exit_handler << handler.new( _self, :|row_exit_event_handler()|, l_list_con )		
+        	l_list_con.add_event_handler( e_handler )
+
+
+		#1
+		sw_button_item.new( l_list_con,  
+        			    #:image, {:delete_record, :ui_resources},
+        			    :model, _self,
+        			    :row_alignment, :centre,
+        			    :selector, { :|remove_w3w_from_list()|, w3w , _true} )
+
+		#2
+		sw_label_item.new( l_list_con, w3w.what3words.write_string ,
+				   :left_spacing, 5, 
+				   :right_spacing, 5, 
+				   :show_truncation?, _true,
+				   :row_alignment, :centre)
+		
+
+
+		#3
+		button_container << sw_container.new( l_list_con, 1, 3, 
+						      :col_alignment, :right,
+						      :top_spacing, top_spacing,
+						      :bottom_spacing, top_spacing,
+						      :left_spacing, item_spacing,
+						      :right_spacing, item_spacing,
+						      :col_spacing, col_spacing,
+						      :col_resize_values , {1,0}, 
+						      :managed?, _false  )
+
+
+
+		#coordinate container
+		l_coord_container << sw_container.new(  button_container , 1, 1, 
+							:col_alignment, :left, 
+							:managed?, _true )
+		
+		_self.add_coordiante_container ( l_coord_container  , w3w  )
+					
+		sw_button_item.new( button_container,
+				    :min_height, 25, 
+				    :model, _self, 
+				    :selector, { :|copy_w3w()|, w3w  } )
+					
+		
+		sw_button_item.new( button_container,
+				    :min_height, 25, 
+				    :model, _self, 
+				    :selector, { :|goto_selected_w3w()|, w3w  } )
+
+										
+
+		l_list_con.set_data(:w3w, w3w)
+	_endloop
+	
+
+_endmethod
+$
+
+
+_private _method what3words_search_history_viewer.add_coordiante_container( parent , w3w  )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	a_theme << sw_swift_manager.current_theme
+	l_text_colour << a_theme[:default_text_colour]
+	heading_style << sw_swift_manager.get_text_style( l_text_colour , :calibri , 12 , _false  )#a_theme[:heading_4_text_style] 
+	background_colour <<  a_theme[:list_background_colour]
+	
+	con << sw_container.new( parent, _unset, 1,
+				 :min_width, 1 ,
+				 :min_height, 1 ,
+				 :border_points_method, :rounded_rectangle_points_1|()| )
+	
+	con.colour << background_colour
+	con.set_data( :background_colour,  _self.coordinate_container_background_colour )
+	con.pre_draw_handler << handler.new( _self, :draw_coordinate_container_background|()| )
+
+	# Allow the container to be movable within its parent.
+	con.allow_move? << _false
+
+	_dynamic !print_float_precision! << 12
+	
+	l_x << sw_label_item.new( con, w3w.coordinate.x.normalised_string ,
+				      :text_style, heading_style,
+				      :row_alignment, :centre,
+				      :col_alignment, :centre )
+
+	l_y  << sw_label_item.new( con, w3w.coordinate.y.normalised_string ,
+				      :text_style, heading_style,
+				      :row_alignment, :centre,
+				      :col_alignment, :centre )
+	>> con 
+_endmethod
+$
+
+
+
+
+_pragma(classify_level=restricted)
+_method what3words_search_history_viewer.draw_coordinate_container_background( a_container, a_window, xmin, ymin, clip_bounds )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	gc << a_container.get_graphics_context( a_window, _true )
+	gc.window_clip_bounds << clip_bounds
+
+	xmax << xmin + a_container.width  + 5
+	ymax << ymin + a_container.height + 5 
+	xmin << xmin - 5
+	ymin << ymin - 5
+	vec << a_container.get_border_points( xmin, ymin, xmax, ymax )
+
+	a_colour << a_container.get_data( :background_colour )
+
+	f_style << sw_swift_manager.get_fill_style( a_colour, 30 )
+	gc.fill_line( f_style, vec )
+
+	l_style << sw_swift_manager.get_line_style( a_colour, 1 )
+	gc.draw_line( l_style, vec )
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.remove_w3w_from_list( w3w,  _optional refresh?)
+	##
+	## Removes selected items from the list
+	##
+	.list_records.remove( w3w )
+	_self.changed(:w3w_list , :refresh )
+	_self.changed(:refresh_pushpins )
+		
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.row_enter_event_handler( row  )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	.selected_row << row 
+	row.children[3].managed? << row.children[2].managed? << row.children[1].managed? << _true
+	row.colour <<  _self.list_row_background_colour
+	row.children[1].image << {:delete_record, :ui_resources}
+	row.children[3].children[2].image << {:copy, :ui_resources }
+	row.children[3].children[3].image << {:goto_object, :ui_resources }
+	
+	row.refresh()
+	_if _self.highlight_active?
+	_then
+		_if .highlight_task _isnt _unset 
+		_then 
+			.highlight_task.cancel()
+		_endif 
+		.highlight_task << _self.application.do_work_at_priority( _self, :|eng!highlight_what3words()|, _thisthread.vm_priority - 1, row )
+	_endif
+	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.set_pushpin_text_colour()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_if .original_pushpin_text_colour _isnt _unset 
+	_then 
+		l_new_colour << .original_pushpin_text_colour.copy_with_colour( _self.highlighted_what3words_text_colour )
+		a_theme << sw_swift_manager.current_theme 
+		a_theme.set_property(:pushpin_text_style, l_new_colour)
+	_endif 
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.restore_pushpin_text_colour()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_if .original_pushpin_text_colour _isnt _unset 
+	_then 
+		a_theme << sw_swift_manager.current_theme 
+		a_theme.set_property(:pushpin_text_style, .original_pushpin_text_colour)
+	_endif 
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic={circuit})
+_private _method what3words_search_history_viewer.w3w_from_selected_row ( row )
+	#---------------------------------------------------
+	## <Req. #> : <Description>
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+	
+	l_index << .list_records.index_equal_of ( row.items[1].selector[2])
+	l_w3w << .list_records.all_at ( l_index ).an_element()
+
+	>> l_w3w 
+_endmethod
+$
+
+
+	
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.eng!highlight_what3words( row  )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+		
+	_thisthread.sleep(300)
+	l_w3w << _self.w3w_from_selected_row ( row )
+	l_w3w.background_colour << _self.highlighted_what3words_background_colour
+	_self.set_pushpin_text_colour()
+	_if _self.display_all_what3words_active?
+	_then 
+		_self.changed(:refresh_pushpins)
+	_else
+		_self.changed(:refresh_pushpins , {l_w3w} )
+	_endif 	
+_endmethod 
+$
+
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.row_exit_event_handler( row )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	_if .list_records.empty?
+	_then
+		_return 
+	_endif
+	.selected_row << _unset 
+	row.children[3].managed? << row.children[1].managed? <<  _false
+	row.colour << colour.called(:white)
+	row.children[1].image << _unset 
+	row.children[3].children[2].image << row.children[3].children[3].image << _unset 
+	row.refresh()
+	_if _self.highlight_active?
+	_then
+		_if .highlight_task _isnt _unset 
+		_then 
+			.highlight_task.cancel()
+		_endif 	
+		_self.restore_pushpin_text_colour()
+		_try
+			l_index << .list_records.index_equal_of ( row.items[1].selector[2])
+			l_w3w << .list_records.all_at ( l_index ).an_element()
+			l_w3w.background_colour << _self.get_pushpin_background_colour()
+		_when error
+			# do nothing
+		_endtry
+		_if _self.display_all_what3words_active?
+		_then 
+			_self.changed(:refresh_pushpins)
+		_else
+			_self.changed(:refresh_pushpins , {l_w3w} )
+		_endif 		
+	_endif	
+_endmethod
+$
+
+
+
+						   
+_pragma(classify_level=restricted, topic={circuit})
+_method what3words_search_history_viewer.get_pushpin_background_colour()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	>> _if (l_plugin << _self.application.plugin(:what3words_plugin)) _isnt _unset
+	   _then 
+		   >>  colour.new_from_hex(l_plugin.get_pushpin_background_colour())
+	   _else
+		   >>  colour.called(:red)
+	   _endif	
+	
+_endmethod
+$
+
+
+
+_pragma(classify_level=subclassible, topic={what3words})
+_method what3words_search_history_viewer.w3w_selected( double_click?  )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	#_if double_click?
+	#_then
+		_if .selected_row  _isnt _unset 
+		_then
+			l_w3w << _self.w3w_from_selected_row ( .selected_row )
+			_self.goto_selected_w3w ( l_w3w )
+			
+		_endif
+	#_endif 
+_endmethod
+$
+
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.remove_all()
+	#---------------------------------------------------
+	## 
+	##
+	## Removes all items from the list
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	.list_records.empty()
+	_self.changed(:w3w_list,:refresh)
+	_self.changed(:refresh_pushpins)
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.goto_w3w()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	_if .selected_row  _isnt _unset 
+	_then
+		l_w3w << _self.w3w_from_selected_row ( .selected_row )
+		_self.goto_selected_w3w ( l_w3w )
+		
+	_endif
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.copy_w3w()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	_if .selected_row _isnt _unset
+	_then
+		l_w3w << _self.w3w_from_selected_row ( .selected_row )
+		l_w3w_string << write_string ( l_w3w.what3words)
+		l_app << _self.framework.application.top_frame.clipboard_text <<  l_w3w_string
+	_endif 	
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.copy_coordinate()
+	#---------------------------------------------------
+	##
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	_if .selected_row _isnt _unset
+	_then
+		l_w3w << _self.w3w_from_selected_row ( .selected_row )
+		l_coordinate_string << write_string ( l_w3w.coordinate.x.as_fixed_string(0,3)  ,%,, l_w3w.coordinate.y.as_fixed_string(0,3) )
+		l_app << _self.framework.application.top_frame.clipboard_text <<  l_coordinate_string
+	_endif 	
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.create_trail ()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	_if .selected_row _isnt _unset
+	_then
+		l_w3w << _self.w3w_from_selected_row ( .selected_row )
+		l_mapman << _self.framework.map_manager
+		l_map << l_mapman.current_trail.add_coordinate( l_w3w.coordinate )
+	_endif 		 
+	 
+_endmethod
+$
+
+
+
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.show_pushpin_for_all_w3ws( display? )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+
+	#DEBUG show("display? :",display?)	
+
+	_if display? _is _true _andif .list_records.empty? _is _false 
+	_then
+		l_coords << .list_records.map(_proc(e) >> e.coordinate _endproc )
+		#l_bbox << bounding_box.new_with_corners(_scatter l_coords )
+		l_bbox << bounding_box.new_surrounding ( l_coords )
+		l_factor << 1.5
+		l_enlarged_bbox << l_bbox.new_enlarging(  l_factor )
+		_self.goto_spatial_context ( l_enlarged_bbox  )
+		_self.changed(:refresh_pushpins)
+	_else
+		_self.clear_pushpins()
+	_endif
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.show_pushpins( w3ws )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+	_self.framework.show_pushpins ( { _self , w3ws.default(.list_records)  } )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.clear_pushpins()
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+
+	_self.framework.clear_pushpins()
+	
+_endmethod
+$
+
+
+
+_method what3words_search_history_viewer.what3words_pushpins_data_available(data_type_name, data )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+	#DEBUG show("data_type_name :",data_type_name , " ","data:",data[2] , "   " , date_time.now() )
+	_if data_type_name _is :what3words_pushpin
+	_then 
+		_local ( owner , l_w3w_pushpins  ) << ( _scatter data )
+		
+		pushpin_records << _if l_w3w_pushpins.is_kind_of?(sw:basic_collection_mixin) 
+				   _then >> l_w3w_pushpins 
+				   _else >> rope.new_with( l_w3w_pushpins )
+				   _endif
+		
+		.list_records.add_all_first(pushpin_records)
+		_self.changed( :w3w_list, :refresh )
+		#DEBUG show("display_all_what3words_active? :", _self.display_all_what3words_active?)	
+		_if _self.display_all_what3words_active?
+		_then
+			_self.changed(:refresh_pushpins)
+		_endif		
+	_endif 
+_endmethod 
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.toggle_highlight_selected_w3ws( highlight? )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_private _method what3words_search_history_viewer.highlight_active?
+	#---------------------------------------------------
+	## 
+	## Returns true if highlight toggle is active.
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	>> _self.action( :show_pushpin_for_selection ).value _is _true
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.display_all_what3words_active?
+	#---------------------------------------------------
+	##
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------
+	
+	>> _self.action(:show_pushpin_for_all).value _is _true 
+_endmethod
+$
+
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.goto_selected_w3w( w3w )
+	#---------------------------------------------------
+	## 
+	## Action callback method.
+	## Sends a goto request to the map_manager.
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+		
+	l_bbox << bounding_box.new_centred (  w3w.coordinate.x , w3w.coordinate.y , 1000 , 1000 )
+	_self.goto_spatial_context ( l_bbox )
+	_self.changed(:refresh_pushpins , {w3w} )
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.goto_spatial_context( a_context, _optional in_new_window? )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------	
+	 _self.framework.databus.make_data_available( :goto_request, { a_context, :new_window?, in_new_window? } )
+ 	
+_endmethod
+$
+
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.terminate()
+	#---------------------------------------------------
+	##
+	## Calls super method.
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	.list_records.empty()
+	_self.changed(:refresh_pushpins)
+	_self.remove_dependent ( _self )
+	_super.terminate()
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.note_change( who, what, _gather data )
+	#---------------------------------------------------
+	## 
+	##
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	_if what _is :refresh_pushpins 
+	_then
+		_self.show_pushpins( data[1] )
+	_endif
+_endmethod
+$
+
+_pragma(classify_level=restricted, topic={what3words})
+_method what3words_search_history_viewer.post_init_plugins()
+	#---------------------------------------------------
+	##
+	## Called when all plug-ins have been loaded. Initialises the
+	## input plug-in.
+	#
+	#  
+	#
+	#---------------- Revision History -----------------
+	# 
+	#-------------- End Revision History ---------------		
+	_try 
+		a_theme << sw_swift_manager.current_theme 
+		.original_pushpin_text_colour << a_theme[:pushpin_text_style]  
+	_when error
+	_endtry 
+	
+_endmethod 
+$
