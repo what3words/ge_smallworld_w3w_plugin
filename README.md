@@ -32,6 +32,7 @@ The plugin is documentated [here](https://developer.what3words.com/tutorial/how-
 ## License - MIT
 
 Versions 1-3, Copyright (C)@Aramideh
+
 Version 4, Copyright (C) 2023, what3words Limited
 
 ## Contributors
